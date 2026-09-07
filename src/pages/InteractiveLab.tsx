@@ -46,16 +46,14 @@ export function InteractiveLab() {
           </div>
           <div className="flex items-center gap-2 self-start md:self-auto">
             <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border ${
-                isTrackingActive
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border ${isTrackingActive
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                   : 'bg-zinc-100 text-zinc-600 border-zinc-200'
-              }`}
+                }`}
             >
               <span
-                className={`w-2 h-2 rounded-full ${
-                  isTrackingActive ? 'bg-emerald-500 animate-ping' : 'bg-zinc-400'
-                }`}
+                className={`w-2 h-2 rounded-full ${isTrackingActive ? 'bg-emerald-500 animate-ping' : 'bg-zinc-400'
+                  }`}
               />
               <span>
                 {isTrackingActive ? (simulationActive ? 'SIMULATION' : 'ACTIVE') : 'STANDBY'}
@@ -74,9 +72,8 @@ export function InteractiveLab() {
             ref={videoRef}
             playsInline
             muted
-            className={`absolute inset-0 w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${
-              cameraActive ? 'opacity-70' : 'opacity-0 pointer-events-none'
-            }`}
+            className={`absolute inset-0 w-full h-full object-cover scale-x-[-1] transition-opacity duration-300 ${cameraActive ? 'opacity-70' : 'opacity-0 pointer-events-none'
+              }`}
           />
 
           {/* Canvas Rendering Overlay */}
@@ -170,15 +167,14 @@ export function InteractiveLab() {
                 <div className="px-3 py-1.5 rounded-md bg-zinc-900/80 backdrop-blur-md border border-zinc-700/60 text-[11px] font-mono text-zinc-300 flex items-center gap-2">
                   <span className="text-zinc-500">GESTURE:</span>
                   <span
-                    className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${
-                      detectionData.gesture === 'Web Shooter'
+                    className={`font-bold px-1.5 py-0.5 rounded text-[10px] ${detectionData.gesture === 'Web Shooter'
                         ? 'text-white bg-zinc-800 border border-zinc-600 shadow-xs'
                         : detectionData.gesture === 'Pinch'
                           ? 'text-amber-400 bg-amber-950/60 border border-amber-700/50'
                           : detectionData.gesture === 'Open Palm'
                             ? 'text-emerald-400 bg-emerald-950/60 border border-emerald-700/50'
                             : 'text-primary-300'
-                    }`}
+                      }`}
                   >
                     {detectionData.gesture.toUpperCase()}
                   </span>
@@ -273,33 +269,30 @@ export function InteractiveLab() {
               <button
                 type="button"
                 onClick={() => setVisualMode('skeleton')}
-                className={`px-3 py-1 rounded-md font-medium transition ${
-                  visualMode === 'skeleton'
+                className={`px-3 py-1 rounded-md font-medium transition ${visualMode === 'skeleton'
                     ? 'bg-white text-zinc-950 shadow-2xs'
                     : 'text-zinc-600 hover:text-zinc-950'
-                }`}
+                  }`}
               >
                 Skeleton + Webs
               </button>
               <button
                 type="button"
                 onClick={() => setVisualMode('webshooter')}
-                className={`px-3 py-1 rounded-md font-medium transition ${
-                  visualMode === 'webshooter'
+                className={`px-3 py-1 rounded-md font-medium transition ${visualMode === 'webshooter'
                     ? 'bg-white text-zinc-950 shadow-2xs'
                     : 'text-zinc-600 hover:text-zinc-950'
-                }`}
+                  }`}
               >
                 Web Shooter Only
               </button>
               <button
                 type="button"
                 onClick={() => setVisualMode('minimal')}
-                className={`px-3 py-1 rounded-md font-medium transition ${
-                  visualMode === 'minimal'
+                className={`px-3 py-1 rounded-md font-medium transition ${visualMode === 'minimal'
                     ? 'bg-white text-zinc-950 shadow-2xs'
                     : 'text-zinc-600 hover:text-zinc-950'
-                }`}
+                  }`}
               >
                 Minimal
               </button>
@@ -310,11 +303,10 @@ export function InteractiveLab() {
               <button
                 type="button"
                 onClick={() => setAudioEnabled(!audioEnabled)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${
-                  audioEnabled
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition ${audioEnabled
                     ? 'bg-primary-50 text-primary-800 border-primary-200 font-semibold'
                     : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
-                }`}
+                  }`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
