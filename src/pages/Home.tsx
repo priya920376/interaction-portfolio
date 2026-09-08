@@ -9,7 +9,6 @@ const featuredProjects = [
     description:
       'Touchless multimodal interface leveraging lightweight pose landmark estimation and real-time WebAudio synthesis.',
     tags: ['MediaPipe', 'WebAudio', 'Canvas'],
-    accentGrad: 'from-teal-500/15 via-emerald-500/10 to-transparent',
     iconText: 'CV // GESTURE',
   },
   {
@@ -20,58 +19,60 @@ const featuredProjects = [
     description:
       'Infinite-depth canvas workspace designed for intuitive 3D spatial layout manipulation and spatial interaction testing.',
     tags: ['Three.js', 'React', 'Spatial UI'],
-    accentGrad: 'from-blue-500/15 via-indigo-500/10 to-transparent',
     iconText: '3D // SPATIAL',
   },
 ];
 
 export function Home() {
   return (
-    <div className="space-y-16 sm:space-y-24">
+    <div className="space-y-16 sm:space-y-24" style={{ backgroundColor: '#FDF8F0' }}>
       {/* Hero Section */}
-      <section className="pt-4 pb-8 sm:pt-8 sm:pb-12 space-y-6 sm:space-y-8">
-        <div className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-white border border-zinc-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.04)] text-zinc-700">
-          <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
+      <section className="pt-4 pb-8 sm:pt-8 sm:pb-12 space-y-6 sm:space-y-8 px-4 sm:px-0">
+        <div
+          className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full text-xs font-medium border shadow-sm"
+          style={{ backgroundColor: '#FFFFFF', borderColor: '#F4A896', color: '#3A3226' }}
+        >
+          <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: '#F4A896' }} />
           <span className="tracking-wide">Interaction Design &amp; Creative Technology</span>
         </div>
 
         <div className="space-y-4 max-w-3xl">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-zinc-950 leading-[1.12]">
-            Crafting intuitive, spatial &amp; vision-driven digital interactions.
+          <h1
+            className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.12]"
+            style={{ color: '#3A3226' }}
+          >
+            Hii!! I'm Priya 👋
           </h1>
-          <p className="text-base sm:text-lg md:text-xl text-zinc-600 leading-relaxed font-normal max-w-2xl">
-            Bridging human intent and creative computation. Exploring novel interfaces, machine
-            learning on the web, and responsive multi-sensory experiences.
+          <p
+            className="text-base sm:text-lg md:text-xl leading-relaxed font-normal max-w-2xl"
+            style={{ color: '#6B5F4F' }}
+          >
+            I'm building playful, gesture-driven interfaces — things you can point at, pinch,
+            and shoot webs from. Scroll down and give it a try.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 sm:gap-4 pt-2">
           <Link
             to="/projects"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-all duration-200 shadow-sm hover:shadow active:scale-[0.98]"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full text-white text-sm font-semibold transition-all duration-200 shadow-sm hover:shadow active:scale-[0.98]"
+            style={{ backgroundColor: '#F4A896' }}
           >
             <span>Explore Selected Work</span>
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M17 8l4 4m0 0l-4 4m4-4H3"
-              />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </Link>
           <Link
             to="/lab"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-white border border-zinc-200/90 text-zinc-700 text-sm font-medium hover:bg-zinc-50 hover:text-zinc-950 transition-all duration-200 shadow-sm"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full border text-sm font-medium transition-all duration-200 shadow-sm"
+            style={{ backgroundColor: '#FFFFFF', borderColor: '#A8C3B0', color: '#3A3226' }}
           >
             <span>Interactive Lab</span>
-            <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-zinc-100 text-zinc-600 font-semibold">
+            <span
+              className="text-[11px] font-mono px-1.5 py-0.5 rounded font-semibold"
+              style={{ backgroundColor: '#EAF2EC', color: '#4B6B54' }}
+            >
               R&amp;D
             </span>
           </Link>
@@ -79,19 +80,23 @@ export function Home() {
       </section>
 
       {/* Featured Projects Grid */}
-      <section className="space-y-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-zinc-200/80 pb-4">
+      <section className="space-y-8 px-4 sm:px-0 pb-16">
+        <div
+          className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b pb-4"
+          style={{ borderColor: '#EFE6D8' }}
+        >
           <div>
-            <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-medium">
+            <span className="text-xs font-mono uppercase tracking-wider font-medium" style={{ color: '#A8967D' }}>
               Portfolio
             </span>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 mt-1">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1" style={{ color: '#3A3226' }}>
               Featured Projects
             </h2>
           </div>
           <Link
             to="/projects"
-            className="group inline-flex items-center gap-1.5 text-sm font-medium text-zinc-600 hover:text-zinc-950 transition-colors"
+            className="group inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
+            style={{ color: '#6B5F4F' }}
           >
             <span>View all projects</span>
             <svg
@@ -110,30 +115,30 @@ export function Home() {
           {featuredProjects.map((project) => (
             <div
               key={project.slug}
-              className="group bg-white rounded-xl border border-zinc-200/80 overflow-hidden flex flex-col justify-between transition-all duration-300 hover:border-zinc-300 hover:shadow-lg hover:-translate-y-1"
+              className="group rounded-xl border overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
+              style={{ backgroundColor: '#FFFFFF', borderColor: '#EFE6D8' }}
             >
-              {/* Card Media / Image Placeholder */}
               <div
-                className={`relative aspect-[16/10] w-full bg-gradient-to-br ${project.accentGrad} bg-zinc-100 border-b border-zinc-200/60 p-6 flex flex-col justify-between overflow-hidden`}
+                className="relative aspect-[16/10] w-full border-b p-6 flex flex-col justify-between overflow-hidden"
+                style={{ backgroundColor: '#FBF3E7', borderColor: '#EFE6D8' }}
               >
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:16px_16px]" />
                 <div className="relative z-10 flex items-center justify-between">
-                  <span className="font-mono text-xs font-semibold px-2 py-1 rounded bg-white/90 backdrop-blur-sm text-zinc-700 shadow-sm border border-zinc-200/50">
+                  <span
+                    className="font-mono text-xs font-semibold px-2 py-1 rounded shadow-sm border"
+                    style={{ backgroundColor: '#FFFFFF', color: '#6B5F4F', borderColor: '#EFE6D8' }}
+                  >
                     {project.iconText}
                   </span>
-                  <span className="text-xs font-mono text-zinc-500 font-medium">
+                  <span className="text-xs font-mono font-medium" style={{ color: '#A8967D' }}>
                     {project.year}
                   </span>
                 </div>
                 <div className="relative z-10 flex items-center justify-center py-6">
-                  <div className="w-12 h-12 rounded-lg bg-white/95 backdrop-blur-sm shadow-sm border border-zinc-200/60 flex items-center justify-center text-zinc-700 group-hover:scale-105 transition-transform">
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
+                  <div
+                    className="w-12 h-12 rounded-lg shadow-sm border flex items-center justify-center group-hover:scale-105 transition-transform"
+                    style={{ backgroundColor: '#FFFFFF', borderColor: '#EFE6D8', color: '#F4A896' }}
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -147,7 +152,8 @@ export function Home() {
                   {project.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-2 py-0.5 text-[11px] font-medium rounded-full bg-white/90 text-zinc-700 border border-zinc-200/60 shadow-2xs"
+                      className="px-2 py-0.5 text-[11px] font-medium rounded-full border shadow-2xs"
+                      style={{ backgroundColor: '#EAF2EC', color: '#4B6B54', borderColor: '#D6E5DA' }}
                     >
                       {tag}
                     </span>
@@ -155,22 +161,24 @@ export function Home() {
                 </div>
               </div>
 
-              {/* Card Body */}
               <div className="p-6 sm:p-7 space-y-4 flex-1 flex flex-col justify-between">
                 <div className="space-y-2">
-                  <span className="text-xs font-mono uppercase tracking-wider text-primary-700 font-semibold">
+                  <span className="text-xs font-mono uppercase tracking-wider font-semibold" style={{ color: '#D18B6F' }}>
                     {project.category}
                   </span>
-                  <h3 className="text-xl font-bold text-zinc-950 group-hover:text-primary-700 transition-colors">
+                  <h3 className="text-xl font-bold transition-colors" style={{ color: '#3A3226' }}>
                     {project.title}
                   </h3>
-                  <p className="text-zinc-600 text-sm leading-relaxed">{project.description}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: '#6B5F4F' }}>
+                    {project.description}
+                  </p>
                 </div>
 
-                <div className="pt-2 border-t border-zinc-100">
+                <div className="pt-2 border-t" style={{ borderColor: '#EFE6D8' }}>
                   <Link
                     to={`/projects/${project.slug}`}
-                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-zinc-900 group-hover:text-primary-700 transition-colors"
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors"
+                    style={{ color: '#3A3226' }}
                   >
                     <span>Read Case Study</span>
                     <svg
@@ -180,12 +188,7 @@ export function Home() {
                       viewBox="0 0 24 24"
                       aria-hidden="true"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
                     </svg>
                   </Link>
                 </div>
