@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
-export type GestureType = 'Idle' | 'Pinch' | 'Open Palm' | 'Pointing' | 'Victory' | 'Web Shooter';
+export type GestureType =
+  | 'Idle'
+  | 'Pinch'
+  | 'Open Palm'
+  | 'Pointing'
+  | 'Victory'
+  | 'Web Shooter'
+  | 'Closed Fist';
 
 export interface LandmarkPoint {
   x: number;
@@ -50,7 +57,6 @@ export function useMediaPipeHands() {
     webShooter: null,
   });
 
-  // 1. Initialize MediaPipe Model
   const initModel = useCallback(async () => {
     if (landmarkerRef.current) return landmarkerRef.current;
 
@@ -64,7 +70,6 @@ export function useMediaPipeHands() {
 
       let landmarker: HandLandmarker;
       try {
-        // First try local cached asset
         landmarker = await HandLandmarker.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath: '/models/hand_landmarker.task',
@@ -74,7 +79,6 @@ export function useMediaPipeHands() {
           numHands: 2,
         });
       } catch {
-        // Fallback to Google CDN model asset
         landmarker = await HandLandmarker.createFromOptions(vision, {
           baseOptions: {
             modelAssetPath:
@@ -100,7 +104,6 @@ export function useMediaPipeHands() {
     }
   }, []);
 
-  // Classify gestures from 21 landmarks
   const classifyGesture = (
     landmarks: LandmarkPoint[]
   ): {
@@ -125,7 +128,6 @@ export function useMediaPipeHands() {
     const ringMcp = landmarks[13];
     const pinkyMcp = landmarks[17];
 
-    // Distance calculations
     const pinchDx = thumbTip.x - indexTip.x;
     const pinchDy = thumbTip.y - indexTip.y;
     const pinchDist = Math.hypot(pinchDx, pinchDy);
@@ -135,10 +137,8 @@ export function useMediaPipeHands() {
       y: (thumbTip.y + indexTip.y) / 2,
     };
 
-    // Index & Middle distance
     const indexMiddleDist = Math.hypot(indexTip.x - middleTip.x, indexTip.y - middleTip.y);
 
-    // Direction vector from index MCP (5) to index TIP (8)
     const rawDirX = indexTip.x - indexMcp.x;
     const rawDirY = indexTip.y - indexMcp.y;
     const dirLen = Math.hypot(rawDirX, rawDirY) || 1;
@@ -152,14 +152,23 @@ export function useMediaPipeHands() {
       y: (indexTip.y + middleTip.y) / 2,
     };
 
-    // Rotation-independent finger extension checks (distance from wrist)
     const distFromWrist = (pt: LandmarkPoint) => Math.hypot(pt.x - wrist.x, pt.y - wrist.y);
     const isIndexExtended = distFromWrist(indexTip) > distFromWrist(indexMcp) * 1.25;
     const isMiddleExtended = distFromWrist(middleTip) > distFromWrist(middleMcp) * 1.25;
     const isRingExtended = distFromWrist(ringTip) > distFromWrist(ringMcp) * 1.2;
     const isPinkyExtended = distFromWrist(pinkyTip) > distFromWrist(pinkyMcp) * 1.2;
 
-    // 1. Web Shooter Gesture: Index and Middle fingertips closed together (< 0.058) and extended
+    // Closed Fist: all four fingers curled in (none extended), and not pinching
+    const isFist =
+      !isIndexExtended &&
+      !isMiddleExtended &&
+      !isRingExtended &&
+      !isPinkyExtended &&
+      pinchDist > 0.08;
+    if (isFist) {
+      return { gesture: 'Closed Fist', pinchDist, pinchCenter: null, webShooter: null };
+    }
+
     const isIndexMiddleClosed = indexMiddleDist < 0.058 && isIndexExtended && isMiddleExtended;
     if (isIndexMiddleClosed) {
       return {
@@ -175,7 +184,6 @@ export function useMediaPipeHands() {
       };
     }
 
-    // 2. Open Palm: all fingers extended and fingers spread (index-middle > 0.065)
     if (
       isIndexExtended &&
       isMiddleExtended &&
@@ -186,12 +194,10 @@ export function useMediaPipeHands() {
       return { gesture: 'Open Palm', pinchDist, pinchCenter: null, webShooter: null };
     }
 
-    // 3. Pinch (Thumb + Index)
     if (pinchDist < 0.08) {
       return { gesture: 'Pinch', pinchDist, pinchCenter, webShooter: null };
     }
 
-    // 4. Victory (Peace sign: index + middle extended and separated)
     if (
       isIndexExtended &&
       isMiddleExtended &&
@@ -202,7 +208,6 @@ export function useMediaPipeHands() {
       return { gesture: 'Victory', pinchDist, pinchCenter: null, webShooter: null };
     }
 
-    // 5. Pointing (only index extended)
     if (isIndexExtended && !isMiddleExtended && !isRingExtended && !isPinkyExtended) {
       return { gesture: 'Pointing', pinchDist, pinchCenter: null, webShooter: null };
     }
@@ -210,7 +215,6 @@ export function useMediaPipeHands() {
     return { gesture: 'Idle', pinchDist, pinchCenter: null, webShooter: null };
   };
 
-  // 2. Start Camera Feed
   const startCamera = async () => {
     setError(null);
     setSimulationActive(false);
@@ -261,7 +265,6 @@ export function useMediaPipeHands() {
     }
   };
 
-  // 3. Stop Camera Feed
   const stopCamera = () => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
@@ -288,7 +291,6 @@ export function useMediaPipeHands() {
     });
   };
 
-  // 4. Procedural Simulated Hand Animation
   const startSimulation = () => {
     stopCamera();
     setSimulationActive(true);
@@ -307,7 +309,6 @@ export function useMediaPipeHands() {
     });
   };
 
-  // Main Detection Loop (Webcam)
   useEffect(() => {
     if (!cameraActive) return;
 
@@ -355,7 +356,6 @@ export function useMediaPipeHands() {
             console.warn('MediaPipe detect frame warning:', e);
           }
 
-          // Compute FPS
           fpsFrameCountRef.current++;
           const now = performance.now();
           if (lastFpsTimeRef.current === 0) {
@@ -381,7 +381,6 @@ export function useMediaPipeHands() {
     };
   }, [cameraActive]);
 
-  // Simulation Loop with Web Shooter demonstration
   useEffect(() => {
     if (!simulationActive) return;
 
@@ -389,84 +388,94 @@ export function useMediaPipeHands() {
     const simLoop = () => {
       simTime += 0.02;
 
-      // Base hand position sweeps across viewport
       const cx = 0.5 + Math.sin(simTime * 0.7) * 0.2;
       const cy = 0.55 + Math.cos(simTime * 0.9) * 0.12;
 
-      // Cycle between 3 gesture phases:
-      // 0 to 3s: Web Shooter (index + middle together, aiming upwards/diagonally)
-      // 3 to 6s: Open Palm (clears all webs)
-      // 6 to 9s: Pinch (sound synth)
+      // Cycle: 0-3.5s Web Shooter, 3.5-6.5s Closed Fist, 6.5-9s Pinch
       const cycleTime = simTime % 9;
       const isWebShooter = cycleTime < 3.5;
-      const isOpenPalm = cycleTime >= 3.5 && cycleTime < 6.5;
+      const isFist = cycleTime >= 3.5 && cycleTime < 6.5;
       const isPinching = cycleTime >= 6.5;
 
-      // Aim direction oscillates slightly
       const aimAngle = -Math.PI / 2 + Math.sin(simTime * 1.5) * 0.35;
       const aimDirX = Math.cos(aimAngle);
       const aimDirY = Math.sin(aimAngle);
 
-      // Spacing between index and middle
       const indexMiddleOffset = isWebShooter ? 0.015 : 0.07;
 
-      const thumbTipX = cx - 0.08 + (isPinching ? 0.04 : 0);
-      const thumbTipY = cy + 0.02 - (isPinching ? 0.05 : 0);
+      const thumbTipX = isFist ? cx - 0.02 : cx - 0.08 + (isPinching ? 0.04 : 0);
+      const thumbTipY = isFist ? cy + 0.1 : cy + 0.02 - (isPinching ? 0.05 : 0);
 
-      // Index and Middle finger coordinates
       const indexMcpX = cx - 0.03;
       const indexMcpY = cy + 0.04;
-      const indexTipX = isWebShooter ? indexMcpX + aimDirX * 0.22 : cx - indexMiddleOffset;
+      const indexTipX = isWebShooter
+        ? indexMcpX + aimDirX * 0.22
+        : isFist
+          ? indexMcpX + 0.01
+          : cx - indexMiddleOffset;
       const indexTipY = isWebShooter
         ? indexMcpY + aimDirY * 0.22
-        : isPinching
-          ? cy - 0.03
-          : cy - 0.14;
+        : isFist
+          ? indexMcpY + 0.05
+          : isPinching
+            ? cy - 0.03
+            : cy - 0.14;
 
       const middleMcpX = cx + 0.01;
       const middleMcpY = cy + 0.04;
-      const middleTipX = isWebShooter ? indexTipX + 0.02 : cx + indexMiddleOffset;
-      const middleTipY = isWebShooter ? indexTipY + 0.01 : cy - 0.17;
+      const middleTipX = isWebShooter
+        ? indexTipX + 0.02
+        : isFist
+          ? middleMcpX + 0.01
+          : cx + indexMiddleOffset;
+      const middleTipY = isWebShooter
+        ? indexTipY + 0.01
+        : isFist
+          ? middleMcpY + 0.05
+          : cy - 0.17;
+
+      const ringTipY = isFist ? cy + 0.02 : cy - 0.14;
+      const pinkyTipY = isFist ? cy + 0.0 : cy - 0.1;
 
       const fakeHand: LandmarkPoint[] = [
-        { x: cx, y: cy + 0.18, z: 0 }, // 0: Wrist
-        { x: cx - 0.06, y: cy + 0.13, z: 0 }, // 1: Thumb CMC
-        { x: cx - 0.09, y: cy + 0.08, z: 0 }, // 2: Thumb MCP
-        { x: cx - 0.1, y: cy + 0.04, z: 0 }, // 3: Thumb IP
-        { x: thumbTipX, y: thumbTipY, z: 0 }, // 4: Thumb Tip
-        { x: indexMcpX, y: indexMcpY, z: 0 }, // 5: Index MCP
-        { x: (indexMcpX + indexTipX) / 2, y: (indexMcpY + indexTipY) / 2, z: 0 }, // 6: Index PIP
-        { x: (indexMcpX + indexTipX * 2) / 3, y: (indexMcpY + indexTipY * 2) / 3, z: 0 }, // 7: Index DIP
-        { x: indexTipX, y: indexTipY, z: 0 }, // 8: Index Tip
-        { x: middleMcpX, y: middleMcpY, z: 0 }, // 9: Middle MCP
-        { x: (middleMcpX + middleTipX) / 2, y: (middleMcpY + middleTipY) / 2, z: 0 }, // 10: Middle PIP
-        { x: (middleMcpX + middleTipX * 2) / 3, y: (middleMcpY + middleTipY * 2) / 3, z: 0 }, // 11: Middle DIP
-        { x: middleTipX, y: middleTipY, z: 0 }, // 12: Middle Tip
-        { x: cx + 0.05, y: cy + 0.05, z: 0 }, // 13: Ring MCP
-        { x: cx + 0.05, y: cy - 0.02, z: 0 }, // 14: Ring PIP
-        { x: cx + 0.05, y: cy - 0.08, z: 0 }, // 15: Ring DIP
-        { x: cx + 0.05, y: cy - 0.14, z: 0 }, // 16: Ring Tip
-        { x: cx + 0.08, y: cy + 0.07, z: 0 }, // 17: Pinky MCP
-        { x: cx + 0.09, y: cy + 0.01, z: 0 }, // 18: Pinky PIP
-        { x: cx + 0.09, y: cy - 0.04, z: 0 }, // 19: Pinky DIP
-        { x: cx + 0.09, y: cy - 0.1, z: 0 }, // 20: Pinky Tip
+        { x: cx, y: cy + 0.18, z: 0 },
+        { x: cx - 0.06, y: cy + 0.13, z: 0 },
+        { x: cx - 0.09, y: cy + 0.08, z: 0 },
+        { x: cx - 0.1, y: cy + 0.04, z: 0 },
+        { x: thumbTipX, y: thumbTipY, z: 0 },
+        { x: indexMcpX, y: indexMcpY, z: 0 },
+        { x: (indexMcpX + indexTipX) / 2, y: (indexMcpY + indexTipY) / 2, z: 0 },
+        { x: (indexMcpX + indexTipX * 2) / 3, y: (indexMcpY + indexTipY * 2) / 3, z: 0 },
+        { x: indexTipX, y: indexTipY, z: 0 },
+        { x: middleMcpX, y: middleMcpY, z: 0 },
+        { x: (middleMcpX + middleTipX) / 2, y: (middleMcpY + middleTipY) / 2, z: 0 },
+        { x: (middleMcpX + middleTipX * 2) / 3, y: (middleMcpY + middleTipY * 2) / 3, z: 0 },
+        { x: middleTipX, y: middleTipY, z: 0 },
+        { x: cx + 0.05, y: cy + 0.05, z: 0 },
+        { x: cx + 0.05, y: cy - 0.02, z: 0 },
+        { x: cx + 0.05, y: cy - 0.08, z: 0 },
+        { x: cx + 0.05, y: ringTipY, z: 0 },
+        { x: cx + 0.08, y: cy + 0.07, z: 0 },
+        { x: cx + 0.09, y: cy + 0.01, z: 0 },
+        { x: cx + 0.09, y: cy - 0.04, z: 0 },
+        { x: cx + 0.09, y: pinkyTipY, z: 0 },
       ];
 
       const currentGesture: GestureType = isWebShooter
         ? 'Web Shooter'
-        : isOpenPalm
-          ? 'Open Palm'
+        : isFist
+          ? 'Closed Fist'
           : isPinching
             ? 'Pinch'
             : 'Idle';
 
       const webShooterObj: WebShooterData | null = isWebShooter
         ? {
-            active: true,
-            origin: { x: (indexTipX + middleTipX) / 2, y: (indexTipY + middleTipY) / 2 },
-            direction: { x: aimDirX, y: aimDirY },
-            indexMiddleDist: Math.hypot(indexTipX - middleTipX, indexTipY - middleTipY),
-          }
+          active: true,
+          origin: { x: (indexTipX + middleTipX) / 2, y: (indexTipY + middleTipY) / 2 },
+          direction: { x: aimDirX, y: aimDirY },
+          indexMiddleDist: Math.hypot(indexTipX - middleTipX, indexTipY - middleTipY),
+        }
         : null;
 
       const pinchCenter = {
@@ -497,7 +506,6 @@ export function useMediaPipeHands() {
     };
   }, [simulationActive]);
 
-  // Lifecycle cleanup
   useEffect(() => {
     return () => {
       stopCamera();

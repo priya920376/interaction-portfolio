@@ -26,32 +26,18 @@ interface WebShot {
   spokes: number;
   spread: number;
   rings: number;
+  settled: boolean;
 }
 
-// MediaPipe standard 21-point hand joint links
 const CONNECTIONS: [number, number][] = [
-  [0, 1],
-  [1, 2],
-  [2, 3],
-  [3, 4], // Thumb
-  [0, 5],
-  [5, 6],
-  [6, 7],
-  [7, 8], // Index
-  [5, 9],
-  [9, 10],
-  [10, 11],
-  [11, 12], // Middle
-  [9, 13],
-  [13, 14],
-  [14, 15],
-  [15, 16], // Ring
-  [13, 17],
-  [0, 17],
-  [17, 18],
-  [18, 19],
-  [19, 20], // Pinky
+  [0, 1], [1, 2], [2, 3], [3, 4],
+  [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12],
+  [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [0, 17], [17, 18], [18, 19], [19, 20],
 ];
+
+const MAX_PERSISTED_SHOTS = 180;
 
 export function HandCanvas({
   detectionData,
@@ -64,12 +50,10 @@ export function HandCanvas({
   const lastSpawnTimeRef = useRef<number>(0);
   const nextShotIdRef = useRef<number>(1);
 
-  // Clear all web shots on explicit button click
   useEffect(() => {
     webShotsRef.current = [];
   }, [clearTrigger]);
 
-  // Audio sonification trigger for Pinch (Thumb + Index)
   useEffect(() => {
     const isPinching = detectionData.gesture === 'Pinch' && detectionData.pinchCenter !== null;
 
@@ -80,7 +64,6 @@ export function HandCanvas({
     }
   }, [detectionData, audioEnabled]);
 
-  // Main Render Loop
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -88,7 +71,6 @@ export function HandCanvas({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Adjust canvas resolution to bounding box
     const rect = canvas.getBoundingClientRect();
     if (canvas.width !== rect.width || canvas.height !== rect.height) {
       canvas.width = rect.width;
@@ -98,30 +80,29 @@ export function HandCanvas({
     const width = canvas.width;
     const height = canvas.height;
 
-    // Clear frame
     ctx.clearRect(0, 0, width, height);
 
-    // 1. Clear State: If hand returns to fully open palm (all 5 extended), clear all active webs immediately
-    if (detectionData.gesture === 'Open Palm') {
+    // Closed Fist now clears all persisted webs
+    if (detectionData.gesture === 'Closed Fist') {
       webShotsRef.current = [];
     }
 
-    // 2. Trigger State: Index + Middle closed together fires web shot
     if (detectionData.gesture === 'Web Shooter' && detectionData.webShooter) {
       const now = performance.now();
-      // Throttle spawn rate to max ~5 shots per second (every 200ms)
       if (now - lastSpawnTimeRef.current >= 200) {
         lastSpawnTimeRef.current = now;
 
-        // Mirrored coordinate transforms:
-        // Video display is scale-x-[-1], so x becomes (1 - x), and dx becomes -dx
         const startX = (1 - detectionData.webShooter.origin.x) * width;
         const startY = detectionData.webShooter.origin.y * height;
         const dirX = -detectionData.webShooter.direction.x;
         const dirY = detectionData.webShooter.direction.y;
         const angle = Math.atan2(dirY, dirX);
 
-        const speed = 7.5; // Travel speed in px/frame
+        const speed = 7.5;
+
+        if (webShotsRef.current.length >= MAX_PERSISTED_SHOTS) {
+          webShotsRef.current.shift();
+        }
 
         webShotsRef.current.push({
           id: nextShotIdRef.current++,
@@ -136,42 +117,43 @@ export function HandCanvas({
           maxRadius: 150 + Math.random() * 30,
           alpha: 0.95,
           spokes: 7,
-          spread: (Math.PI / 180) * 80, // 80 degree cone
+          spread: (Math.PI / 180) * 80,
           rings: 4,
+          settled: false,
         });
       }
     }
 
-    // 3. Render and Update Flying Web Shots
     for (let i = webShotsRef.current.length - 1; i >= 0; i--) {
       const shot = webShotsRef.current[i];
 
-      // Physical progression
-      shot.x += shot.vx;
-      shot.y += shot.vy;
-      shot.radius += (shot.maxRadius - shot.radius) * 0.05 + 1.2;
-      shot.alpha -= 0.012; // Smooth fade-out
+      // Only move/grow while still in its "shoot-in" phase
+      if (!shot.settled) {
+        shot.x += shot.vx;
+        shot.y += shot.vy;
+        shot.radius += (shot.maxRadius - shot.radius) * 0.05 + 1.2;
 
-      if (shot.alpha <= 0.02 || shot.radius >= shot.maxRadius * 0.98) {
-        webShotsRef.current.splice(i, 1);
-        continue;
+        // Once it reaches near full size, it settles and stays forever
+        if (shot.radius >= shot.maxRadius * 0.98) {
+          shot.settled = true;
+          shot.alpha = 0.85;
+        }
       }
+      // Settled shots no longer fade or move - they persist until Closed Fist clears them
 
       ctx.save();
-      ctx.globalAlpha = Math.max(0, shot.alpha);
+      ctx.globalAlpha = shot.alpha;
       ctx.lineWidth = 1.3;
-      ctx.strokeStyle = '#f4f4f5'; // Studio white/light-gray
+      ctx.strokeStyle = '#f4f4f5';
       ctx.shadowColor = '#e4e4e7';
       ctx.shadowBlur = 8;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      // Apex position (back vertex of the web net)
       const apexOffset = shot.radius * 0.35;
       const apexX = shot.x - Math.cos(shot.angle) * apexOffset;
       const apexY = shot.y - Math.sin(shot.angle) * apexOffset;
 
-      // Calculate radiating spoke endpoints
       const spokeEnds: { x: number; y: number }[] = [];
       const halfSpread = shot.spread / 2;
 
@@ -182,14 +164,12 @@ export function HandCanvas({
         const endY = shot.y + Math.sin(spokeAngle) * shot.radius;
         spokeEnds.push({ x: endX, y: endY });
 
-        // Draw radial spoke line from apex outward
         ctx.beginPath();
         ctx.moveTo(apexX, apexY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
       }
 
-      // Draw cross-connecting spiderweb ring arcs
       for (let r = 1; r <= shot.rings; r++) {
         const ringFrac = Math.pow(r / shot.rings, 0.85);
 
@@ -203,7 +183,6 @@ export function HandCanvas({
           const p2RingX = apexX + (p2.x - apexX) * ringFrac;
           const p2RingY = apexY + (p2.y - apexY) * ringFrac;
 
-          // Midpoint with inward sag curve towards the apex
           const midX = (p1RingX + p2RingX) / 2 - Math.cos(shot.angle) * (shot.radius * 0.06);
           const midY = (p1RingY + p2RingY) / 2 - Math.sin(shot.angle) * (shot.radius * 0.06);
 
@@ -215,7 +194,6 @@ export function HandCanvas({
         ctx.stroke();
       }
 
-      // Draw silk trailing thread from origin/fingertips to apex
       ctx.save();
       ctx.lineWidth = 1.0;
       ctx.strokeStyle = 'rgba(228, 228, 231, 0.6)';
@@ -228,7 +206,6 @@ export function HandCanvas({
       ctx.restore();
     }
 
-    // 4. Render Hand Landmarks and Skeletal Bones (if mode is skeleton or minimal)
     if (visualMode !== 'webshooter') {
       detectionData.landmarks.forEach((hand, handIndex) => {
         const points = hand.map((pt) => ({
@@ -237,7 +214,6 @@ export function HandCanvas({
           z: pt.z,
         }));
 
-        // Draw bones
         if (visualMode === 'skeleton') {
           ctx.save();
           ctx.lineWidth = 3;
@@ -260,7 +236,6 @@ export function HandCanvas({
           ctx.restore();
         }
 
-        // Draw joint nodes
         points.forEach((pt, index) => {
           const isTip = [4, 8, 12, 16, 20].includes(index);
           const isPinchFinger = [4, 8].includes(index) && detectionData.gesture === 'Pinch';
@@ -274,17 +249,17 @@ export function HandCanvas({
 
           if (isWebShooterFinger) {
             ctx.arc(pt.x, pt.y, 7.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#f4f4f5'; // Pure white glow for web shooter fingers
+            ctx.fillStyle = '#f4f4f5';
             ctx.shadowColor = '#ffffff';
             ctx.shadowBlur = 14;
           } else if (isPinchFinger) {
             ctx.arc(pt.x, pt.y, 7.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#f59e0b'; // Amber highlight for pinch
+            ctx.fillStyle = '#f59e0b';
             ctx.shadowColor = '#fbbf24';
             ctx.shadowBlur = 12;
           } else if (isTip) {
             ctx.arc(pt.x, pt.y, 5.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#2dd4bf'; // Neon cyan tip
+            ctx.fillStyle = '#2dd4bf';
             ctx.shadowColor = '#5eead4';
             ctx.shadowBlur = 8;
           } else {
@@ -301,7 +276,6 @@ export function HandCanvas({
           ctx.restore();
         });
 
-        // Handedness and Gesture Label
         const wrist = points[0];
         if (wrist) {
           ctx.save();
@@ -320,7 +294,9 @@ export function HandCanvas({
               ? '#f4f4f5'
               : detectionData.gesture === 'Pinch'
                 ? '#fde047'
-                : '#5eead4';
+                : detectionData.gesture === 'Closed Fist'
+                  ? '#fca5a5'
+                  : '#5eead4';
           ctx.textAlign = 'center';
           ctx.fillText(labelText, wrist.x, wrist.y + 29);
           ctx.restore();
@@ -328,7 +304,6 @@ export function HandCanvas({
       });
     }
 
-    // 5. Aiming Direction Indicator when in Web Shooter gesture
     if (detectionData.gesture === 'Web Shooter' && detectionData.webShooter) {
       const originX = (1 - detectionData.webShooter.origin.x) * width;
       const originY = detectionData.webShooter.origin.y * height;
@@ -346,7 +321,6 @@ export function HandCanvas({
       ctx.restore();
     }
 
-    // 6. Pinch Reticle for Audio Synth
     if (detectionData.gesture === 'Pinch' && detectionData.pinchCenter) {
       const px = (1 - detectionData.pinchCenter.x) * width;
       const py = detectionData.pinchCenter.y * height;
