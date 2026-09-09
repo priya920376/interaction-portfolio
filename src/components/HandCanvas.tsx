@@ -23,8 +23,6 @@ interface WebShot {
   radius: number;
   maxRadius: number;
   alpha: number;
-  spokes: number;
-  spread: number;
   rings: number;
   settled: boolean;
 }
@@ -38,6 +36,7 @@ const CONNECTIONS: [number, number][] = [
 ];
 
 const MAX_PERSISTED_SHOTS = 180;
+const SPOKE_COUNT = 8;
 
 export function HandCanvas({
   detectionData,
@@ -82,14 +81,13 @@ export function HandCanvas({
 
     ctx.clearRect(0, 0, width, height);
 
-    // Closed Fist now clears all persisted webs
     if (detectionData.gesture === 'Closed Fist') {
       webShotsRef.current = [];
     }
 
     if (detectionData.gesture === 'Web Shooter' && detectionData.webShooter) {
       const now = performance.now();
-      if (now - lastSpawnTimeRef.current >= 200) {
+      if (now - lastSpawnTimeRef.current >= 220) {
         lastSpawnTimeRef.current = now;
 
         const startX = (1 - detectionData.webShooter.origin.x) * width;
@@ -113,11 +111,9 @@ export function HandCanvas({
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           angle,
-          radius: 14,
-          maxRadius: 150 + Math.random() * 30,
+          radius: 10,
+          maxRadius: 55 + Math.random() * 20,
           alpha: 0.95,
-          spokes: 7,
-          spread: (Math.PI / 180) * 80,
           rings: 4,
           settled: false,
         });
@@ -127,64 +123,64 @@ export function HandCanvas({
     for (let i = webShotsRef.current.length - 1; i >= 0; i--) {
       const shot = webShotsRef.current[i];
 
-      // Only move/grow while still in its "shoot-in" phase
       if (!shot.settled) {
-        shot.x += shot.vx;
-        shot.y += shot.vy;
-        shot.radius += (shot.maxRadius - shot.radius) * 0.05 + 1.2;
+        shot.x += shot.vx * 0.5;
+        shot.y += shot.vy * 0.5;
+        shot.radius += (shot.maxRadius - shot.radius) * 0.08 + 0.8;
 
-        // Once it reaches near full size, it settles and stays forever
         if (shot.radius >= shot.maxRadius * 0.98) {
           shot.settled = true;
           shot.alpha = 0.85;
         }
       }
-      // Settled shots no longer fade or move - they persist until Closed Fist clears them
 
       ctx.save();
       ctx.globalAlpha = shot.alpha;
-      ctx.lineWidth = 1.3;
+      ctx.lineWidth = 1.2;
       ctx.strokeStyle = '#f4f4f5';
       ctx.shadowColor = '#e4e4e7';
       ctx.shadowBlur = 8;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
-      const apexOffset = shot.radius * 0.35;
-      const apexX = shot.x - Math.cos(shot.angle) * apexOffset;
-      const apexY = shot.y - Math.sin(shot.angle) * apexOffset;
+      const centerX = shot.x;
+      const centerY = shot.y;
 
       const spokeEnds: { x: number; y: number }[] = [];
-      const halfSpread = shot.spread / 2;
-
-      for (let s = 0; s < shot.spokes; s++) {
-        const t = shot.spokes > 1 ? s / (shot.spokes - 1) : 0.5;
-        const spokeAngle = shot.angle - halfSpread + t * shot.spread;
-        const endX = shot.x + Math.cos(spokeAngle) * shot.radius;
-        const endY = shot.y + Math.sin(spokeAngle) * shot.radius;
+      for (let s = 0; s < SPOKE_COUNT; s++) {
+        const spokeAngle = (Math.PI * 2 * s) / SPOKE_COUNT;
+        const endX = centerX + Math.cos(spokeAngle) * shot.radius;
+        const endY = centerY + Math.sin(spokeAngle) * shot.radius;
         spokeEnds.push({ x: endX, y: endY });
 
         ctx.beginPath();
-        ctx.moveTo(apexX, apexY);
+        ctx.moveTo(centerX, centerY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
       }
 
       for (let r = 1; r <= shot.rings; r++) {
-        const ringFrac = Math.pow(r / shot.rings, 0.85);
+        const ringFrac = r / shot.rings;
 
         ctx.beginPath();
-        for (let s = 0; s < shot.spokes - 1; s++) {
-          const p1 = spokeEnds[s];
-          const p2 = spokeEnds[s + 1];
+        for (let s = 0; s <= SPOKE_COUNT; s++) {
+          const idx = s % SPOKE_COUNT;
+          const next = (s + 1) % SPOKE_COUNT;
+          const p1 = spokeEnds[idx];
+          const p2 = spokeEnds[next];
 
-          const p1RingX = apexX + (p1.x - apexX) * ringFrac;
-          const p1RingY = apexY + (p1.y - apexY) * ringFrac;
-          const p2RingX = apexX + (p2.x - apexX) * ringFrac;
-          const p2RingY = apexY + (p2.y - apexY) * ringFrac;
+          const p1RingX = centerX + (p1.x - centerX) * ringFrac;
+          const p1RingY = centerY + (p1.y - centerY) * ringFrac;
+          const p2RingX = centerX + (p2.x - centerX) * ringFrac;
+          const p2RingY = centerY + (p2.y - centerY) * ringFrac;
 
-          const midX = (p1RingX + p2RingX) / 2 - Math.cos(shot.angle) * (shot.radius * 0.06);
-          const midY = (p1RingY + p2RingY) / 2 - Math.sin(shot.angle) * (shot.radius * 0.06);
+          const midAngle =
+            (Math.atan2(p1RingY - centerY, p1RingX - centerX) +
+              Math.atan2(p2RingY - centerY, p2RingX - centerX)) /
+            2;
+          const sagAmount = (shot.radius / shot.rings) * 0.28;
+          const midX = centerX + Math.cos(midAngle) * (ringFrac * shot.radius - sagAmount);
+          const midY = centerY + Math.sin(midAngle) * (ringFrac * shot.radius - sagAmount);
 
           if (s === 0) {
             ctx.moveTo(p1RingX, p1RingY);
@@ -199,7 +195,7 @@ export function HandCanvas({
       ctx.strokeStyle = 'rgba(228, 228, 231, 0.6)';
       ctx.beginPath();
       ctx.moveTo(shot.originX, shot.originY);
-      ctx.lineTo(apexX, apexY);
+      ctx.lineTo(centerX, centerY);
       ctx.stroke();
       ctx.restore();
 
