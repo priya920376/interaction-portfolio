@@ -53,7 +53,7 @@ export function Home() {
               className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.12]"
               style={{ color: '#3A3226' }}
             >
-              Hii!! I'm Priya 👋
+              Hello!!
             </h1>
             <p
               className="text-base sm:text-lg md:text-xl leading-relaxed font-normal max-w-2xl"
@@ -99,8 +99,8 @@ export function Home() {
           </button>
           <span
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-medium border ${isTrackingActive
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                : 'bg-zinc-100 text-zinc-600 border-zinc-200'
+              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+              : 'bg-zinc-100 text-zinc-600 border-zinc-200'
               }`}
           >
             <span
@@ -304,8 +304,8 @@ export function Home() {
                 type="button"
                 onClick={() => setAudioEnabled(!audioEnabled)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition ${audioEnabled
-                    ? 'bg-primary-50 text-primary-800 border-primary-200 font-semibold'
-                    : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
+                  ? 'bg-primary-50 text-primary-800 border-primary-200 font-semibold'
+                  : 'bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50'
                   }`}
               >
                 {audioEnabled ? 'Audio Synth On' : 'Mute Synth'}
